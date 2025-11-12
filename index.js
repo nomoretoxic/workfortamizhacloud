@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { Client, GatewayIntentBits, Partials, ChannelType } = require('discord.js');
 
-// --- Start a simple web server (prevents "port not found" errors) ---
+// --- Start a simple web server (to prevent port errors) ---
 const app = express();
 app.get('/', (req, res) => res.send('✅ Bot is running!'));
 app.listen(process.env.PORT || 3000, () => {
@@ -14,32 +14,38 @@ const client = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessages, // optional (server message support)
+    GatewayIntentBits.GuildMessages, // optional
   ],
   partials: [Partials.Channel], // required for DMs
 });
 
-// --- Log in confirmation ---
+// --- Variables from .env ---
+const PREFIX = process.env.BOT_PREFIX || '!';
+const PAYMENT_IMAGE_URL = process.env.PAYMENT_IMAGE_URL;
+
+// --- When bot is ready ---
 client.once('ready', () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// --- Message handling ---
+// --- Handle messages ---
 client.on('messageCreate', async (message) => {
-  // Ignore messages from bots
+  // Ignore bots
   if (message.author.bot) return;
 
   // Only respond to DMs
   if (message.channel.type !== ChannelType.DM) return;
 
-  // Command: !payment
-  if (message.content.trim().toLowerCase() === '!payment') {
-    const qrImage = 'https://cdn.discordapp.com/attachments/1437027536914612255/1437967253793407107/PhonePeQR_India_Post_Payment_Bank_-_73520.png?ex=69152add&is=6913d95d&hm=e9b0d12fe26499345e82a566655e78d1346a666343e149b9a21cc4994faa37c4';
+  // Command: e.g. !payment or whatever prefix you set
+  if (message.content.trim().toLowerCase() === `${PREFIX}payment`) {
+    if (!PAYMENT_IMAGE_URL) {
+      return message.channel.send('❌ Payment image URL not configured.');
+    }
 
     try {
       await message.channel.send({
         content: '**📱 Scan this QR code to make your payment:**',
-        files: [qrImage],
+        files: [PAYMENT_IMAGE_URL],
       });
       console.log(`💸 Sent payment QR to ${message.author.tag}`);
     } catch (err) {
@@ -48,7 +54,7 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// --- Log in with your bot token ---
+// --- Log in with Discord token ---
 client.login(process.env.DISCORD_TOKEN);
 
  
