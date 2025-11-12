@@ -1,19 +1,17 @@
 {
-  "name": "payment-bot",
+  "name": "discord-payment-bot",
   "version": "1.0.0",
-  "description": "A simple Discord bot that sends a payment QR image in DMs when someone types !payment.",
+  "description": "A Discord bot that sends a payment QR code in DMs.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node index.js"
   },
-  "author": "YourName",
-  "license": "MIT",
   "dependencies": {
     "discord.js": "^14.16.3",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.4"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
