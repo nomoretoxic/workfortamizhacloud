@@ -1,42 +1,46 @@
+// Load environment variables
 require('dotenv').config();
+
+// Import modules
 const express = require('express');
 const { Client, GatewayIntentBits, Partials, ChannelType } = require('discord.js');
 
-// --- Start a simple web server (to prevent port errors) ---
+// --- Simple web server (Render/Replit keep-alive) ---
 const app = express();
-app.get('/', (req, res) => res.send('✅ Bot is running!'));
+app.get('/', (req, res) => res.send('✅ Bot is running and connected to Discord.'));
 app.listen(process.env.PORT || 3000, () => {
   console.log(`🌐 Web server running on port ${process.env.PORT || 3000}`);
 });
 
-// --- Create the Discord client ---
+// --- Discord client setup ---
 const client = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessages, // optional
+    GatewayIntentBits.GuildMessages, // Optional: handle guild messages too
   ],
-  partials: [Partials.Channel], // required for DMs
+  partials: [Partials.Channel], // Needed for DMs
 });
 
-// --- Variables from .env ---
+// --- Environment variables ---
 const PREFIX = process.env.BOT_PREFIX || '!';
 const PAYMENT_IMAGE_URL = process.env.PAYMENT_IMAGE_URL;
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 
-// --- When bot is ready ---
+// --- When the bot is ready ---
 client.once('ready', () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// --- Handle messages ---
+// --- Message handler ---
 client.on('messageCreate', async (message) => {
-  // Ignore bots
+  // Ignore other bots
   if (message.author.bot) return;
 
   // Only respond to DMs
   if (message.channel.type !== ChannelType.DM) return;
 
-  // Command: e.g. !payment or whatever prefix you set
+  // Command: e.g. !payment
   if (message.content.trim().toLowerCase() === `${PREFIX}payment`) {
     if (!PAYMENT_IMAGE_URL) {
       return message.channel.send('❌ Payment image URL not configured.');
@@ -52,9 +56,20 @@ client.on('messageCreate', async (message) => {
       console.error('❌ Error sending DM:', err);
     }
   }
+
+  // Optional: !help command
+  if (message.content.trim().toLowerCase() === `${PREFIX}help`) {
+    await message.channel.send(
+      `**Hi ${message.author.username}!** 👋\n` +
+      `Here are my available DM commands:\n\n` +
+      `• \`${PREFIX}payment\` — Get the QR code to make a payment.\n` +
+      `• \`${PREFIX}help\` — Show this help message.`
+    );
+  }
 });
 
-// --- Log in with Discord token ---
-client.login(process.env.DISCORD_TOKEN);
+// --- Log in the bot ---
+client.login(DISCORD_TOKEN);
 
- 
+
+      
