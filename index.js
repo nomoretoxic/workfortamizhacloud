@@ -1,46 +1,54 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const express = require('express');
+const { Client, GatewayIntentBits, Partials, ChannelType } = require('discord.js');
 
+// --- Start a simple web server (prevents "port not found" errors) ---
+const app = express();
+app.get('/', (req, res) => res.send('✅ Bot is running!'));
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`🌐 Web server running on port ${process.env.PORT || 3000}`);
+});
+
+// --- Create the Discord client ---
 const client = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessages // optional, in case you want guild support
+    GatewayIntentBits.GuildMessages, // optional (server message support)
   ],
-  partials: [Partials.Channel] // required to receive DMs
+  partials: [Partials.Channel], // required for DMs
 });
 
-// 🔧 Load variables from .env
-const PREFIX = process.env.BOT_PREFIX || '!';
-const PAYMENT_IMAGE_URL = process.env.PAYMENT_IMAGE_URL;
-const TOKEN = process.env.DISCORD_TOKEN;
-
+// --- Log in confirmation ---
 client.once('ready', () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-  console.log(`💬 Prefix: ${PREFIX}`);
-  console.log(`🖼️ Payment Image: ${PAYMENT_IMAGE_URL ? 'Loaded' : 'Missing'}`);
+  console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
+// --- Message handling ---
 client.on('messageCreate', async (message) => {
-  // Ignore bot messages
+  // Ignore messages from bots
   if (message.author.bot) return;
 
-  // Only respond to DMs (type 1 = DMChannel)
-  if (message.channel.type !== 1) return;
+  // Only respond to DMs
+  if (message.channel.type !== ChannelType.DM) return;
 
-  // Check for payment command
-  if (message.content.trim().toLowerCase() === `${PREFIX}payment`) {
+  // Command: !payment
+  if (message.content.trim().toLowerCase() === '!payment') {
+    const qrImage = 'https://cdn.discordapp.com/attachments/1437027536914612255/1437967253793407107/PhonePeQR_India_Post_Payment_Bank_-_73520.png?ex=69152add&is=6913d95d&hm=e9b0d12fe26499345e82a566655e78d1346a666343e149b9a21cc4994faa37c4';
+
     try {
       await message.channel.send({
         content: '**📱 Scan this QR code to make your payment:**',
-        files: [PAYMENT_IMAGE_URL],
+        files: [qrImage],
       });
-      console.log(`✅ Sent payment QR to ${message.author.tag}`);
+      console.log(`💸 Sent payment QR to ${message.author.tag}`);
     } catch (err) {
       console.error('❌ Error sending DM:', err);
     }
   }
 });
 
-// 🧠 Login using token
-client.login(TOKEN);
+// --- Log in with your bot token ---
+client.login(process.env.DISCORD_TOKEN);
+
+ 
