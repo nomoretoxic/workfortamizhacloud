@@ -5,36 +5,42 @@ const client = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessages, // optional, in case you also want guild support
+    GatewayIntentBits.GuildMessages // optional, in case you want guild support
   ],
   partials: [Partials.Channel] // required to receive DMs
 });
 
+// 🔧 Load variables from .env
+const PREFIX = process.env.BOT_PREFIX || '!';
+const PAYMENT_IMAGE_URL = process.env.PAYMENT_IMAGE_URL;
+const TOKEN = process.env.DISCORD_TOKEN;
+
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
+  console.log(`💬 Prefix: ${PREFIX}`);
+  console.log(`🖼️ Payment Image: ${PAYMENT_IMAGE_URL ? 'Loaded' : 'Missing'}`);
 });
 
 client.on('messageCreate', async (message) => {
-  // Ignore messages from bots
+  // Ignore bot messages
   if (message.author.bot) return;
 
-  // Only respond to DMs (not in servers)
-  if (message.channel.type !== 1) return; // type 1 = DMChannel
+  // Only respond to DMs (type 1 = DMChannel)
+  if (message.channel.type !== 1) return;
 
-  // Command check
-  if (message.content.trim().toLowerCase() === '!payment') {
-    const qrImage = 'https://cdn.discordapp.com/attachments/1437027536914612255/1437967253793407107/PhonePeQR_India_Post_Payment_Bank_-_73520.png?ex=69152add&is=6913d95d&hm=e9b0d12fe26499345e82a566655e78d1346a666343e149b9a21cc4994faa37c4';
-
+  // Check for payment command
+  if (message.content.trim().toLowerCase() === `${PREFIX}payment`) {
     try {
       await message.channel.send({
         content: '**📱 Scan this QR code to make your payment:**',
-        files: [qrImage],
+        files: [PAYMENT_IMAGE_URL],
       });
-      console.log(`Sent payment QR to ${message.author.tag}`);
+      console.log(`✅ Sent payment QR to ${message.author.tag}`);
     } catch (err) {
-      console.error('Error sending DM:', err);
+      console.error('❌ Error sending DM:', err);
     }
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+// 🧠 Login using token
+client.login(TOKEN);
