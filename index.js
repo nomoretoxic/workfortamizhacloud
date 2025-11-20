@@ -3,7 +3,7 @@ require('dotenv').config();
 
 // --- Import modules ---
 const express = require('express');
-const { Client, GatewayIntentBits, Partials, ChannelType } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 
 // --- Simple web server (for Render/Replit keep-alive) ---
 const app = express();
@@ -13,7 +13,7 @@ app.listen(process.env.PORT || 3000, () => {
 });
 
 // --- Environment variables ---
-const PREFIX = process.env.BOT_PREFIX || '!';
+const PREFIX = '!'; // prefix confirmed
 const PAYMENT_IMAGE_URL = process.env.PAYMENT_IMAGE_URL;
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 
@@ -36,8 +36,29 @@ client.once('ready', () => {
 
 // --- Message handler ---
 client.on('messageCreate', async (message) => {
-  // Ignore bots
   if (message.author.bot) return;
 
-  // Log all received messages for debugging
   console.log(`📩 [${message.channel.type}] ${message.author.tag}: ${message.content}`);
+
+  // Only respond in DMs
+  if (message.channel.type !== 1) return; // 1 = DM
+
+  // Must start with prefix
+  if (!message.content.startsWith(PREFIX)) return;
+
+  const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
+
+  // --- !payment command (DM ONLY) ---
+  if (command === "payment") {
+    return message.reply({
+      content: "Here is your payment info:",
+      files: [PAYMENT_IMAGE_URL]
+    });
+  }
+});
+
+// --- Login ---
+client.login(DISCORD_TOKEN);
+
+  
